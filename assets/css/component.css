@@ -1,0 +1,39 @@
+.menu .menu-item:hover {
+    background: #ccc;
+    color: #fff;
+}
+
+.menu {
+    border: 1px solid #ccc;
+    position: absolute;
+}
+
+.menu .menu-item {
+    padding: 3px 10px 3px 5px;
+    cursor: pointer;
+}
+
+.menu-triggle {
+    display: block;
+    min-width: 60px;
+}
+
+.nav-header {
+    height: 40px;
+    line-height: 40px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+    position: fixed;
+    width: 100%;
+    background-color: #fff;
+    top: 0;
+    padding: 0;
+}
+
+.nav-header .pull-left {
+    padding-left: 25px;
+}
+
+.nav-header .pull-right {
+    padding-right: 25px;
+}

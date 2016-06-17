@@ -32,3 +32,19 @@ body {
 .invisible {
     visibility: hidden;
 }
+
+ul li {
+    list-style: none;
+}
+
+a {
+    cursor: pointer;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+ul {
+    margin: 0;
+}

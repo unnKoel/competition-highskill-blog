@@ -1,0 +1,18 @@
+#article-edit textarea {
+min-height: 463px;
+}
+
+#article-edit ul {
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 480px;
+}
+
+#article-edit .head {
+    height: 100px;
+}
+
+#article-edit .head > div {
+    margin-left: 25px;
+    margin-top: 60px;
+}
