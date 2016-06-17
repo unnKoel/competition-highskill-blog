@@ -9,7 +9,7 @@
 
     var urlValues = window.location.href.match(new RegExp("[\?\&]id=([^\&]*)(\&?)", "i")),
         id = urlValues ? urlValues[1] : urlValues;
-    var articles = generateStore('articles', []).get().value,
+    var articles = generateStore('articles', [], true).get().value,
         article = table(articles).find('id', id);
     viewArt(article);
 

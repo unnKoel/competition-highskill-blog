@@ -8,6 +8,7 @@
         if (backCode == 5002) {
             window.location.href = "login.html";
         } else {
+            
             article().editInit();
         }
     });

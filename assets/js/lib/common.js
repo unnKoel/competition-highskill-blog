@@ -13,13 +13,13 @@
                     return {code: 1, value: JSON.parse(localStorage.getItem(storeKey) || JSON.stringify(defaultVal))}
                 }
                 else {
-                    if (user().isLogin()) {
+                    if (user().isLogin().code == 1) {
                         return {
                             code: 1,
                             value: JSON.parse(localStorage.getItem(storeKey) || JSON.stringify(defaultVal))
                         }
                     } else {
-                        return {code: 5002, value: "未登录"}
+                        window.location.href = 'login.html';
                     }
                 }
             },
@@ -30,11 +30,11 @@
                     return {code: 1}
                 }
                 else {
-                    if (user().isLogin()) {
+                    if (user().isLogin().code == 1) {
                         localStorage.setItem(storeKey, JSON.stringify(values));
                         return {code: 1}
                     } else {
-                        return {code: 5002, value: "未登录"}
+                        window.location.href = 'login.html';
                     }
                 }
             }
@@ -114,21 +114,27 @@
                 });
             },
 
+            order_asc: function (key) {
+                tableArray.sort(function (a, b) {
+                    return b[key.toString()] - a[key.toString()];
+                });
+            },
+
             //分页
             paging: function (page, count, key) {
-                this.order(key);
+                this.order_asc(key);
 
                 var arrayLenght = tableArray.length;
                 var beginIndex = (page - 1) * count > tableArray.length - 1 ? tableArray.length - 1 : (page - 1) * count;
-                var endIndex = page * count - 1 > tableArray.length - 1 ? tableArray.length - 1 : page * count - 1;
+                var endIndex = page * count > tableArray.length ? tableArray.length : page * count;
 
                 var resPerPage = [];
-                if (beginIndex == endIndex) {
-                    resPerPage = [];
-                } else {
-                    for (var i = beginIndex; i <= endIndex; i++) {
-                        resPerPage.push(tableArray[i]);
-                    }
+
+                if ((page - 1) * count > tableArray.length - 1 && page * count > tableArray.length - 1) {
+                    return [];
+                }
+                for (var i = beginIndex; i < endIndex; i++) {
+                    resPerPage.push(tableArray[i]);
                 }
                 return resPerPage;
             }
@@ -210,13 +216,30 @@
                     }
                 }
 
+                var currentArt = null;
+                if (art) {
+                    currentArt = art;
+                } else if (!art && myArticles.length) {
+                    currentArt = myArticles[0];
+                } else {
+                    currentArt = {
+                        content: '',
+                        name: ''
+                    };
+                }
+
+                function view(currentArt) {
+                    $('#art-area').val(currentArt.content);
+                    $('#art-title').val(currentArt.name);
+                    currentArt.publish ? $('.publish').text('已发布').addClass('disable') : $('.publish').text('发布文章').removeClass('disable');
+                }
+
+                view(currentArt);
 
                 $(".art-list a").on('click', function () {
                     var artId = $(this).data('id');
-                    art = table(myArticles).find('id', artId);
-                    $('#art-area').val(art.content);
-                    $('#art-title').val(art.name);
-                    art.publish ? $('.publish').text('已发布').addClass('disable') : $('.publish').text('发布文章').removeClass('disable');
+                    currentArt = table(myArticles).find('id', artId);
+                    view(currentArt);
                 });
 
                 //$(".art-list a.first").click();
@@ -228,21 +251,21 @@
                 //});
 
                 //发布-------------------------------
-                $('.publish').on('click', function () {
+                $('.publish').unbind('click').bind('click', function () {
                     if ($(this).hasClass('disable')) return 0;
-                    self.publish(art, $('#art-title').val(), $('#art-area').val());
-                    $(this).text('已发布').addClass('disable');
+                    self.publish(currentArt, $('#art-title').val(), $('#art-area').val());
+                    //$(this).text('已发布').addClass('disable');
                 });
 
-                $('.new').on('click', function () {
-                    art = {};
+                $('.new').unbind('click').bind('click', function () {
+                    currentArt = {};
                     $('.publish').removeClass('disable').text('保存文章');
                     $('#art-title').val("无标题文章");
                     $('#art-area').val('');
                 });
 
-                $('#art-title,#art-area').on('keyup', function () {
-                    if (art.publish == 1) {
+                $('#art-title,#art-area').unbind('keyup').bind('keyup', function () {
+                    if (currentArt.publish == 1) {
                         $('.publish').removeClass('disable').text('更新发布');
                     }
                 });
@@ -250,69 +273,84 @@
 
             //查找文章
             find: function (id) {
-                return table(generateStore('articles', []).get().value).find('id', id);
+                return table(generateStore('articles', [], true).get().value).find('id', id);
             },
 
             //保存
             save: function (id, name, content) {
-                var articles = generateStore('articles', []).get().value;
+                var articles = generateStore('articles', [], true).get().value;
                 var artTab = table(articles);
                 //article.time=
                 artTab.modify('id', id, 'name', name);
                 artTab.modify('id', id, 'content', content);
-                generateStore('articles', []).set(articles);
+                generateStore('articles', [], true).set(articles);
+                return table(generateStore('articles', [], true).get().value).find('id', id);
             },
 
             add: function (name, content) {
-                var lgUsers = generateStore('login-user', []).get(),
+                var lgUsers = generateStore('login-user', [], true).get(),
                     lgUser = table(lgUsers.value).find('email', cookie().get('sg-login'));
 
-                var articles = generateStore('articles', []).get().value;
-                var artTab = table(articles);
-                artTab.order('id');
-                var lastArt = articles[articles.length - 1];
-                articles.push({
-                    name: name,
-                    content: content,
-                    id: lastArt.id + 1,
-                    nick: lgUser.nick,
-                    email: lgUser.email,
-                    publish: 0
-                });
-                generateStore('articles', []).set(articles);
-                return table(generateStore('articles', []).get().value).find('id', lastArt.id + 1);
+                var articles = generateStore('articles', [], true).get().value;
+                if (articles.length) {   //已有文章
+                    var artTab = table(articles);
+                    artTab.order('id');
+                    var lastArt = articles[articles.length - 1];
+                    articles.push({
+                        name: name,
+                        content: content,
+                        id: lastArt.id + 1,
+                        nick: lgUser.nick,
+                        email: lgUser.email,
+                        publish: 0
+                    });
+                    generateStore('articles', [], true).set(articles);
+                    return table(generateStore('articles', [], true).get().value).find('id', lastArt.id + 1);
+                } else {
+                    articles.push({
+                        name: name,
+                        content: content,
+                        id: 1,
+                        nick: lgUser.nick,
+                        email: lgUser.email,
+                        publish: 0
+                    });
+                    generateStore('articles', [], true).set(articles);
+                    return table(generateStore('articles', [], true).get().value).find('id', 1);
+                }
             },
 
             //发布
             publish: function (art, name, content) {
                 if (!art.id) {
                     art = this.add(name, content);
-                    $('.publish').removeClass('disable').text('发布文章');
+                    //$('.publish').removeClass('disable').text('发布文章');
                 }
                 else {
-                    var articles = generateStore('articles', []).get().value;
+                    var articles = generateStore('articles', [], true).get().value;
                     var artTab = table(articles),
                         article = artTab.find('id', art.id);
                     if (article.publish == 0) {
                         artTab.modify('id', art.id, 'publish', 1);
-                        generateStore('articles', []).set(articles);
+                        generateStore('articles', [], true).set(articles);
+                        art = artTab.find('id', art.id);
                     } else {
-                        this.save(art.id, name, content);
+                        art = this.save(art.id, name, content);
                     }
                 }
                 this.editInit(art);
             },
 
             unPublish: function (id) {
-                var artTab = table(generateStore('articles', []).get().value);
+                var artTab = table(generateStore('articles', [], true).get().value);
                 artTab.modify('id', id, 'publish', 0);
             },
 
             delete: function (id) {
-                var articles = generateStore('articles', []).get().value;
+                var articles = generateStore('articles', [], true).get().value;
                 var artTab = table(articles);
                 artTab.delete('id', id);
-                generateStore('articles', []).set(articles);
+                generateStore('articles', [], true).set(articles);
                 this.editInit();
             }
         }

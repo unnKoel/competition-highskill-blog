@@ -40,7 +40,8 @@
 #article-edit ul {
     border: 1px solid #ccc;
     padding: 10px;
-    min-height: 480px;
+    height: 480px;
+    overflow-y: auto;
 }
 
 #article-edit .head {

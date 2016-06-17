@@ -17,11 +17,16 @@
                 page = 1;
             var pageArts = table(articles).paging(page, 5, 'id');
             view(pageArts);
-            $win.scroll(function () {
-                if ($doc.scrollTop() >= $doc.height() - $win.height()) {
-                    pageArts = table(articles).paging(++page, 5, 'id');
-                    view(pageArts);
-                }
+            //$win.scroll(function () {
+            //    if ($doc.scrollTop() >= $doc.height() - $win.height()) {
+            //        pageArts = table(articles).paging(++page, 5, 'id');
+            //        view(pageArts);
+            //    }
+            //});
+
+            $('#more').on('click', function () {
+                pageArts = table(articles).paging(++page, 5, 'id');
+                view(pageArts);
             });
 
             function view(pageArts) {
@@ -36,11 +41,6 @@
                 }
             }
         };
-        //var backCode = user.isLogin().code;
-        //if (backCode == 5002) {
-        //    window.location.href = "login.html";
-        //} else {
         doPage();
-        //}
     });
 })(jQuery, window);
